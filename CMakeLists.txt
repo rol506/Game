@@ -3,11 +3,20 @@ cmake_minimum_required(VERSION 3.31.0 FATAL_ERROR)
 set(PROJECT_NAME Game)
 project(${PROJECT_NAME} VERSION 1.0)
 
-set(${CMAKE_EXPORT_COMPILE_COMMANDS} ON)
+set(CMAKE_EXPORT_COMPILE_COMMANDS ON)
 
 add_executable(${PROJECT_NAME}
   src/main.cpp
+
+  src/Renderer/ShaderProgram.cpp
+  src/Renderer/ShaderProgram.h
 )
+
+add_subdirectory(external/glfw)
+target_link_libraries(${PROJECT_NAME} glfw)
+
+add_subdirectory(external/glad)
+target_link_libraries(${PROJECT_NAME} glad)
 
 target_compile_features(${PROJECT_NAME} PUBLIC cxx_std_17)
 set_target_properties(${PROJECT_NAME} PROPERTIES RUNTIME_OUTPUT_DIRECTORY ${CMAKE_BINARY_DIR}/bin)
