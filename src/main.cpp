@@ -6,6 +6,7 @@
 #include <unistd.h>
 
 #include "Renderer/ShaderProgram.h"
+#include "Resources/ResourceManager.h"
 
 int gWindowSizeX = 640;
 int gWindowSizeY = 480;
@@ -59,6 +60,8 @@ int main(void)
   delete path;
   std::cout << "Executable path: " << executablePath << "\n";
 
+  ResourceManager::setExecutablePath(executablePath);
+
   /* Initialize the library */
   if (!glfwInit())
   {
@@ -96,22 +99,7 @@ int main(void)
   std::cout << "OpenGL renderer: " << glGetString(GL_RENDERER) << "\n";
 
   {
-
-    /*GLuint vertex, fragment, shader;
-    vertex = glCreateShader(GL_VERTEX_SHADER);
-    glShaderSource(vertex, 1, vertexSource, nullptr);
-    glCompileShader(vertex);
-
-    fragment = glCreateShader(GL_FRAGMENT_SHADER);
-    glShaderSource(fragment, 1, fragmentSource, nullptr);
-    glCompileShader(fragment);
-
-    shader = glCreateProgram();
-    glAttachShader(shader, vertex);
-    glAttachShader(shader, fragment);
-    glLinkProgram(shader);*/
-
-    RenderEngine::ShaderProgram shader = RenderEngine::ShaderProgram(vertexSource, fragmentSource);
+    auto shader = ResourceManager::loadShaders("DefaultShader", "res/shaders/vertex.glsl", "res/shaders/fragment.glsl");
 
     GLuint VBO, VAO;
     glGenBuffers(1, &VBO);
@@ -131,7 +119,7 @@ int main(void)
       /* Render here */
       glClear(GL_COLOR_BUFFER_BIT);
 
-      shader.use();
+      shader->use();
       glDrawArrays(GL_TRIANGLES, 0, 3);
 
       /* Swap front and back buffers */
@@ -142,6 +130,7 @@ int main(void)
     }
   }
 
+  ResourceManager::unloadAllResources();
   glfwTerminate();
 
   std::cout << "Exited!" << std::endl;
