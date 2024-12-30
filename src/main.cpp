@@ -8,8 +8,9 @@
 #include "Renderer/ShaderProgram.h"
 #include "Resources/ResourceManager.h"
 
-int gWindowSizeX = 640;
-int gWindowSizeY = 480;
+#include <glm/vec2.hpp>
+
+glm::ivec2 gWindowSize(640, 480);
 
 static GLfloat vertices[] = {
   //X      Y     Z
@@ -44,8 +45,8 @@ static void glfwKeyCallback(GLFWwindow* window, int key, int scancode, int actio
 
 static void glfwFramebufferSizeCallback(GLFWwindow* window, int width, int height)
 {
-  gWindowSizeX = width;
-  gWindowSizeY = height;
+  gWindowSize.x = width;
+  gWindowSize.y = height;
   glViewport(0, 0, width, height);
 }
 
@@ -74,7 +75,7 @@ int main(void)
   glfwWindowHint(GLFW_OPENGL_PROFILE, GLFW_OPENGL_CORE_PROFILE);
 
   /* Create a windowed mode window and its OpenGL context */
-  window = glfwCreateWindow(640, 480, "Game by rol506", NULL, NULL);
+  window = glfwCreateWindow(gWindowSize.x, gWindowSize.y, "Game by rol506", NULL, NULL);
   if (!window)
   {
     std::cout << "Failed to create window!\n";
