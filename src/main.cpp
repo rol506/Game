@@ -3,7 +3,13 @@
 
 #include <iostream>
 #include <string>
+
+//get path
+#ifdef __linux__
 #include <unistd.h>
+#elif _WIN32
+#include <windows.h>
+#endif
 
 #include "Resources/ResourceManager.h"
 #include "Renderer/ShaderProgram.h"
@@ -38,12 +44,24 @@ static void glfwFramebufferSizeCallback(GLFWwindow* window, int width, int heigh
 int main(void)
 {
   GLFWwindow* window;
+  std::string executablePath;
 
+//get executable path
+#ifdef __linux__
   char* path = (char*)malloc(1024);
   ssize_t r;
   r = readlink("/proc/self/exe", path, 1023);
-  std::string executablePath = path;
+  executablePath = path;
   delete path;
+#elif _WIN32
+
+  char* path = (char*)malloc(1024);
+  GetModuleFileName(NULL, path, 1024);
+  executablePath = path;
+  delete path;
+
+#endif
+
   std::cout << "Executable path: " << executablePath << "\n";
 
   ResourceManager::setExecutablePath(executablePath);
