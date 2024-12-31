@@ -96,4 +96,14 @@ namespace RenderEngine
     shader.m_ID = 0;
     shader.m_isCompiled = false; 
   }
+
+  void ShaderProgram::setInt(const int value, const std::string& name)
+  {
+    glUniform1i(glGetUniformLocation(m_ID, name.c_str()), value);
+  }
+
+  void ShaderProgram::setFloat(const float value, const std::string& name)
+  {
+    glUniform1f(glGetUniformLocation(m_ID, name.c_str()), value);
+  }
 }

@@ -5,34 +5,19 @@
 #include <string>
 #include <unistd.h>
 
-#include "Renderer/ShaderProgram.h"
 #include "Resources/ResourceManager.h"
+#include "Renderer/ShaderProgram.h"
+#include "Renderer/Texture2D.h"
 
 #include <glm/vec2.hpp>
 
 glm::ivec2 gWindowSize(640, 480);
 
 static GLfloat vertices[] = {
-  //X      Y     Z
-  -0.5f, -0.5f, 0.0f,
-   0.0f,  0.5f, 0.0f,
-   0.5f, -0.5f, 0.0f
-};
-
-static const char vertexSource[] = {
-  "#version 430 core\n"
-  "layout (location=0) in vec3 vertexPosition;"
-  "void main() {"
-  "gl_Position = vec4(vertexPosition, 1.0);"
-  "}"
-};
-
-static const char fragmentSource[] = {
-  "#version 430 core\n"
-  "out vec4 FragColor;"
-  "void main() {"
-  "FragColor = vec4(0.0, 1.0, 0.0, 1.0);"
-  "}"
+  //X      Y     Z     U     V
+  -0.5f, -0.5f, 0.0f, 0.0f, 0.0f,
+   0.0f,  0.5f, 0.0f, 0.5f, 1.0f,
+   0.5f, -0.5f, 0.0f, 1.0f, 0.0f,
 };
 
 static void glfwKeyCallback(GLFWwindow* window, int key, int scancode, int action, int mods)
@@ -100,7 +85,8 @@ int main(void)
   std::cout << "OpenGL renderer: " << glGetString(GL_RENDERER) << "\n";
 
   {
-    auto shader = ResourceManager::loadShaders("DefaultShader", "res/shaders/vertex.glsl", "res/shaders/fragment.glsl");
+    std::shared_ptr<RenderEngine::ShaderProgram> shader = ResourceManager::loadShaders("DefaultShader", "res/shaders/vertex.glsl", "res/shaders/fragment.glsl");
+    std::shared_ptr<RenderEngine::Texture2D> texture = ResourceManager::loadTexture("DefaultTexture", "res/textures/rol506_logo.jpg");
 
     GLuint VBO, VAO;
     glGenBuffers(1, &VBO);
@@ -110,8 +96,15 @@ int main(void)
     glBufferData(GL_ARRAY_BUFFER, sizeof(vertices), vertices, GL_STATIC_DRAW);
 
     glBindVertexArray(VAO);
-    glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, 0, nullptr);
+    glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, 5 * sizeof(GLfloat), nullptr);
     glEnableVertexAttribArray(0);
+    glVertexAttribPointer(1, 2, GL_FLOAT, GL_FALSE, 5 * sizeof(GLfloat), (void*)(3 * sizeof(GLfloat)));
+    glEnableVertexAttribArray(1);
+
+    shader->use();
+    shader->setInt(0, "tex");
+    glActiveTexture(GL_TEXTURE0);
+    texture->bind();
 
     glClearColor(66.f/255.f, 170.f/255.f, 255.f/255.f, 1.0f);
     /* Loop until the user closes the window */
@@ -121,6 +114,7 @@ int main(void)
       glClear(GL_COLOR_BUFFER_BIT);
 
       shader->use();
+      texture->bind();
       glDrawArrays(GL_TRIANGLES, 0, 3);
 
       /* Swap front and back buffers */
