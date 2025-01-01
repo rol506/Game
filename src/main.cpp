@@ -1,3 +1,4 @@
+#include "Renderer/VertexBufferLayout.h"
 #include <glad/glad.h>
 #include <GLFW/glfw3.h>
 
@@ -14,6 +15,7 @@
 #include "Resources/ResourceManager.h"
 #include "Renderer/ShaderProgram.h"
 #include "Renderer/Texture2D.h"
+#include "Renderer/VertexArray.h"
 
 #include <glm/vec2.hpp>
 
@@ -106,18 +108,16 @@ int main(void)
     std::shared_ptr<RenderEngine::ShaderProgram> shader = ResourceManager::loadShaders("DefaultShader", "res/shaders/vertex.glsl", "res/shaders/fragment.glsl");
     std::shared_ptr<RenderEngine::Texture2D> texture = ResourceManager::loadTexture("DefaultTexture", "res/textures/rol506_logo.jpg");
 
-    GLuint VBO, VAO;
-    glGenBuffers(1, &VBO);
-    glGenVertexArrays(1, &VAO);
+    RenderEngine::VertexArray VAO;
+    RenderEngine::VertexBuffer VBO;
+    VBO.init(vertices, sizeof(vertices)); //already bound
 
-    glBindBuffer(GL_ARRAY_BUFFER, VBO);
-    glBufferData(GL_ARRAY_BUFFER, sizeof(vertices), vertices, GL_STATIC_DRAW);
+    RenderEngine::VertexBufferLayout layout;
+    layout.reserve(2);
+    layout.addElementLayoutFloat(3, false);
+    layout.addElementLayoutFloat(2, false);
 
-    glBindVertexArray(VAO);
-    glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, 5 * sizeof(GLfloat), nullptr);
-    glEnableVertexAttribArray(0);
-    glVertexAttribPointer(1, 2, GL_FLOAT, GL_FALSE, 5 * sizeof(GLfloat), (void*)(3 * sizeof(GLfloat)));
-    glEnableVertexAttribArray(1);
+    VAO.addBuffer(VBO, layout); //already bound
 
     shader->use();
     shader->setInt(0, "tex");
@@ -133,6 +133,7 @@ int main(void)
 
       shader->use();
       texture->bind();
+      VAO.bind();
       glDrawArrays(GL_TRIANGLES, 0, 3);
 
       /* Swap front and back buffers */
