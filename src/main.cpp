@@ -16,16 +16,28 @@
 #include "Renderer/ShaderProgram.h"
 #include "Renderer/Texture2D.h"
 #include "Renderer/VertexArray.h"
+#include "Renderer/IndexBuffer.h"
 
 #include <glm/vec2.hpp>
 
 glm::ivec2 gWindowSize(640, 480);
 
 static GLfloat vertices[] = {
+  
+  // 1 - 2
+  // | / |
+  // 0 - 3
+
   //X      Y     Z     U     V
-  -0.5f, -0.5f, 0.0f, 0.0f, 0.0f,
-   0.0f,  0.5f, 0.0f, 0.5f, 1.0f,
-   0.5f, -0.5f, 0.0f, 1.0f, 0.0f,
+  -0.5f, -0.5f, 0.0f, 0.0f, 0.0f, // 1
+  -0.5f,  0.5f, 0.0f, 0.0f, 1.0f, // 2
+   0.5f,  0.5f, 0.0f, 1.0f, 1.0f, // 3
+   0.5f, -0.5f, 0.0f, 1.0f, 0.0f, // 4 
+};
+
+static GLuint indices[] = {
+  0, 1, 2,
+  0, 2, 3,
 };
 
 static void glfwKeyCallback(GLFWwindow* window, int key, int scancode, int action, int mods)
@@ -118,6 +130,9 @@ int main(void)
     layout.addElementLayoutFloat(2, false);
 
     VAO.addBuffer(VBO, layout); //already bound
+    
+    RenderEngine::IndexBuffer EBO;
+    EBO.init(indices, 6); //already bound
 
     shader->use();
     shader->setInt(0, "tex");
@@ -134,7 +149,7 @@ int main(void)
       shader->use();
       texture->bind();
       VAO.bind();
-      glDrawArrays(GL_TRIANGLES, 0, 3);
+      glDrawElements(GL_TRIANGLES, EBO.getCount(), GL_UNSIGNED_INT, nullptr);
 
       /* Swap front and back buffers */
       glfwSwapBuffers(window);
