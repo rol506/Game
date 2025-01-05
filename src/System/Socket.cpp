@@ -18,30 +18,12 @@
 #pragma comment (lib, "AdvApi32.lib")
 #endif
 
-#ifdef __linux__
-int System::Socket::m_sockfd, System::Socket::m_count;
-struct sockaddr_in System::Socket::m_serv_addr;
-struct hostent* System::Socket::m_server;
-#elif _WIN32
-WSADATA System::Socket::m_wsaData;
-SOCKET System::Socket::m_connectSocket;
-struct addrinfo* System::Socket::m_result;
-struct addrinfo System::Socket::m_hints;
-#endif
-
-//this version will use only 2KiB of memory for messages
-char System::Socket::m_buffer[2048];
-bool System::Socket::m_debug;
-bool System::Socket::m_connected;
-int System::Socket::m_port;
-
 namespace System
 {
-  void Socket::init(const bool debug)
+  Socket::Socket(const bool debug)
+    : m_debug(false), m_connected(false)
   {
 #ifdef __linux__
-    m_debug = debug;
-    m_connected = false;
 
     m_sockfd = socket(AF_INET, SOCK_STREAM, 0);
     if (m_sockfd < 0)
@@ -69,12 +51,14 @@ namespace System
 #endif
   }
 
-  void Socket::close()
+  Socket::~Socket()
   {
+
+    m_connected = false;
+
 #ifdef __linux__
     ::close(m_sockfd);
 #elif _WIN32
-    m_connected = false;
     closesocket(m_connectSocket);
     WSACleanup();
 #endif
@@ -170,7 +154,6 @@ namespace System
     {
       if (m_debug)
         std::cerr << "Failed to write to socket!\n";
-      close();
       return false;
     }
 
@@ -182,9 +165,6 @@ namespace System
     {
       if (m_debug)
         std::cerr << "send failed: " << WSAGetLastError() << "\n";
-      m_connected = false;
-      closesocket(m_connectSocket);
-      WSACleanup();
       return false;
     }
 

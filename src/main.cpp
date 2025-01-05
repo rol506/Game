@@ -85,22 +85,23 @@ int main(int argc, const char** argv)
 
   ResourceManager::setExecutablePath(executablePath);
 
+
   if (argc > 1 && std::string(argv[1]) == "-send"){
-    System::Socket::init(true);
+
+    System::Socket socket(true);
     std::string host; int port;
     std::cout << "Enter remote host: ";
     std::cin >> host;
     std::cout << "Enter remote host port: ";
     std::cin >> port;
-    if (System::Socket::connect(host, port))
+    if (socket.connect(host, port))
     {
       char message[2048];
       std::cout << "Enter a message (2048 chars max): ";
       std::cin.get();
       std::cin.getline(message, 2048);
-      System::Socket::sendMessage(message);
+      socket.sendMessage(message);
     }
-    System::Socket::close();
   }
 
   /* Initialize the library */
