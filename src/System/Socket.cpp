@@ -1,16 +1,25 @@
 #include "Socket.h"
 
 #include <iostream>
+#include <stdlib.h>
 
 #ifdef __linux__
 #include <string.h>
 #include <sys/socket.h>
 #include <sys/types.h>
 #include <unistd.h>
+#elif _WIN32
+#define WIN32_LEAN_AND_MEAN
+#include <windows.h>
+#include <ws2tcpip.h>
+
+#pragma comment (lib, "Ws2_32.lib")
+#pragma comment (lib, "Mswsock.lib")
+#pragma comment (lib, "AdvApi32.lib")
 #endif
 
 #ifdef __linux__
-int System::Socket::m_sockfd, System::Socket::m_port, System::Socket::m_count;
+int System::Socket::m_sockfd, System::Socket::m_count;
 struct sockaddr_in System::Socket::m_serv_addr;
 struct hostent* System::Socket::m_server;
 #elif _WIN32
@@ -24,6 +33,7 @@ struct addrinfo System::Socket::m_hints;
 char System::Socket::m_buffer[2048];
 bool System::Socket::m_debug;
 bool System::Socket::m_connected;
+int System::Socket::m_port;
 
 namespace System
 {
@@ -43,7 +53,6 @@ namespace System
 
     m_connectSocket = INVALID_SOCKET;
     m_result = NULL;
-    m_ptr = NULL;
 
     int iResult = WSAStartup(MAKEWORD(2, 2), &m_wsaData);
     if (iResult != 0)
@@ -100,7 +109,9 @@ namespace System
 
     struct addrinfo* ptr = NULL;
 
-    int iResult = getaddrinfo(hostname.c_str(), m_port, &m_hints, &m_result);
+    std::string prt = std::to_string(m_port);
+
+    int iResult = getaddrinfo(hostname.c_str(), prt.c_str(), &m_hints, &m_result);
     if (iResult != 0)
     {
       if (m_debug)
@@ -109,7 +120,7 @@ namespace System
       return false;
     }
 
-    for (ptr = result; ptr != NULL; ptr=ptr->ai_next)
+    for (ptr = m_result; ptr != NULL; ptr=ptr->ai_next)
     {
       m_connectSocket = socket(ptr->ai_family, ptr->ai_socktype, ptr->ai_protocol);
       if (m_connectSocket == INVALID_SOCKET)
@@ -120,7 +131,7 @@ namespace System
         return false;
       }
 
-      iResult = connect(m_connectSocket, ptr->ai_addr, (int)ptr->ai_addrlen);
+      iResult = ::connect(m_connectSocket, ptr->ai_addr, (int)ptr->ai_addrlen);
       if (iResult == SOCKET_ERROR)
       {
         closesocket(m_connectSocket);
@@ -207,18 +218,20 @@ namespace System
 
     do {
 
-      iResult = recv(m_connectionSocket, m_buffer, 2048, 0);
-      if (m_debug)
-        if (iResult > 0)
+      iResult = recv(m_connectSocket, m_buffer, 2048, 0);
+      if (m_debug){
+        if (iResult > 0){
           std::cout << "Bytes received: " << iResult << "\n" << "Message: " << m_buffer << "\n";
-        else if (iResult == 0)
+        }
+        else if (iResult == 0){
           std::cout << "Connection closed!\n";
+        }
         else
           std::cerr << "recv failed: " << WSAGetLastError() << "\n";
+      }
     } while (iResult > 0);
 
     return std::string(m_buffer);
-
 #endif
   }
 }

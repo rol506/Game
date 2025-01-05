@@ -1,4 +1,8 @@
-#include "Renderer/VertexBufferLayout.h"
+#ifdef _WIN32
+#define WIN32_LEAN_AND_MEAN
+#define APIENTRY __stdcall
+#endif
+
 #include <glad/glad.h>
 #include <GLFW/glfw3.h>
 
@@ -9,7 +13,7 @@
 #ifdef __linux__
 #include <unistd.h>
 #elif _WIN32
-#include <windows.h>
+//#include <windows.h>
 #endif
 
 #include "Resources/ResourceManager.h"
@@ -110,12 +114,7 @@ int main(void)
   /* Make the window's context current */
   glfwMakeContextCurrent(window);
 
-  if (!gladLoadGL())
-  {
-    std::cout << "Failed to load GlaD!\n";
-    glfwTerminate();
-    return -1;
-  }
+  gladLoadGLLoader((GLADloadproc)glfwGetProcAddress);
 
   glfwSetKeyCallback(window, glfwKeyCallback);
   glfwSetFramebufferSizeCallback(window, glfwFramebufferSizeCallback);

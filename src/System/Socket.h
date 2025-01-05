@@ -7,15 +7,8 @@
 #include <netdb.h>
 #elif _WIN32
 
-#define WIN32_LEAN_AND_MEAN
-
-#include <windows.h>
 #include <winsock2.h>
-#include <ws2tcpip.h>
 
-#pragma comment (lib, "Ws2_32.lib")
-#pragma comment (lib, "Mswsock.lib")
-#pragma comment (lib, "AdvApi32.lib")
 #endif
 
 namespace System
@@ -36,7 +29,7 @@ namespace System
   private:
 
 #ifdef __linux__
-    static int m_sockfd, m_port, m_count;
+    static int m_sockfd, m_count;
     static sockaddr_in m_serv_addr;
     static hostent* m_server;
 #elif _WIN32
@@ -48,7 +41,7 @@ namespace System
 
     //this version will use only 2KiB of memory for messages
     static char m_buffer[2048];
-
+    static int m_port;
     static bool m_debug;
     static bool m_connected;
 

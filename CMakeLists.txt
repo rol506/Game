@@ -28,9 +28,12 @@ add_executable(${PROJECT_NAME}
   src/System/Socket.h
 )
 
-add_executable(TestSocket
-  src/server.c
-)
+
+if (UNIX)
+  add_executable(TestSocket
+    src/server.c
+  )
+endif(UNIX)
 
 add_subdirectory(external/glfw)
 target_link_libraries(${PROJECT_NAME} glfw)
