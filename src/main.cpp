@@ -18,6 +18,8 @@
 #include "Renderer/VertexArray.h"
 #include "Renderer/IndexBuffer.h"
 
+#include "System/Socket.h"
+
 #include <glm/vec2.hpp>
 
 glm::ivec2 gWindowSize(640, 480);
@@ -79,6 +81,11 @@ int main(void)
   std::cout << "Executable path: " << executablePath << "\n";
 
   ResourceManager::setExecutablePath(executablePath);
+
+  System::Socket::init(true);
+  System::Socket::connect("localhost", 4221);
+  System::Socket::sendMessage("Hello from Game!");
+  System::Socket::close();
 
   /* Initialize the library */
   if (!glfwInit())

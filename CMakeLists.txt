@@ -23,6 +23,13 @@ add_executable(${PROJECT_NAME}
 
   src/Resources/ResourceManager.cpp
   src/Resources/ResourceManager.h
+
+  src/System/Socket.cpp
+  src/System/Socket.h
+)
+
+add_executable(TestSocket
+  src/server.c
 )
 
 add_subdirectory(external/glfw)
