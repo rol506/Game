@@ -17,15 +17,16 @@
 #endif
 
 #include "Resources/ResourceManager.h"
-#include "Renderer/ShaderProgram.h"
-#include "Renderer/Texture2D.h"
 #include "Renderer/Renderer.h"
-
 #include "System/Socket.h"
+#include "Renderer/Sprite2D.h"
 
 #include <glm/vec2.hpp>
+#include <glm/mat4x4.hpp>
+#include <glm/gtc/matrix_transform.hpp>
 
 glm::ivec2 gWindowSize(640, 480);
+glm::mat4 gProjection(1.0f);
 
 static GLfloat vertices[] = {
   
@@ -57,6 +58,9 @@ static void glfwFramebufferSizeCallback(GLFWwindow* window, int width, int heigh
 {
   gWindowSize.x = width;
   gWindowSize.y = height;
+
+  gProjection = glm::ortho(0.0f, static_cast<float>(gWindowSize.x), 0.0f, static_cast<float>(gWindowSize.y), 0.1f, 100.f);
+
   glViewport(0, 0, width, height);
 }
 
@@ -136,28 +140,21 @@ int main(int argc, const char** argv)
   std::cout << "OpenGL renderer: " << RenderEngine::Renderer::getRendererStr() << "\n";
 
   {
-    std::shared_ptr<RenderEngine::ShaderProgram> shader = ResourceManager::loadShaders("DefaultShader", "res/shaders/vertex.glsl", "res/shaders/fragment.glsl");
-    std::shared_ptr<RenderEngine::Texture2D> texture = ResourceManager::loadTexture("DefaultTexture", "res/textures/rol506_logo.jpg");
+    auto shader = ResourceManager::loadShaders("SpriteShader", "res/shaders/vSprite.vert", "res/shaders/fSprite.frag");
+    auto texture = ResourceManager::loadTexture("SpriteTexture", "res/textures/rol506_logo.jpg");
+    auto sprite = ResourceManager::loadSprite("Sprite", "SpriteShader", "SpriteTexture");
 
-    RenderEngine::VertexArray VAO;
-    RenderEngine::VertexBuffer VBO;
-    VBO.init(vertices, sizeof(vertices)); //already bound
+    gProjection = glm::ortho(0.0f, static_cast<float>(gWindowSize.x), 0.0f, static_cast<float>(gWindowSize.y), -100.f, 100.f);
+    glm::mat4 view(1.0f);
+    view = glm::translate(view, glm::vec3(0.0f, -3.0f, 0.0f));
 
-    RenderEngine::VertexBufferLayout layout;
-    layout.reserve(2);
-    layout.addElementLayoutFloat(3, false);
-    layout.addElementLayoutFloat(2, false);
-
-    VAO.addBuffer(VBO, layout); //already bound
-    
-    RenderEngine::IndexBuffer EBO;
-    EBO.init(indices, 6); //already bound
+    sprite->setPosition(glm::vec2(gWindowSize.x/2.f, gWindowSize.y/2.f));
+    sprite->setRotation(45.f);
 
     shader->use();
-    shader->setInt(0, "tex");
-    glActiveTexture(GL_TEXTURE0);
-    texture->bind();
-
+    shader->setMat4(gProjection, "projectionMatrix");
+    shader->setMat4(view, "viewMatrix");
+    RenderEngine::Renderer::setDepthTest(true);
     RenderEngine::Renderer::setClearColor(66.f/255.f, 170.f/255.f, 255.f/255.f, 1.0f);
     /* Loop until the user closes the window */
     while (!glfwWindowShouldClose(window))
@@ -165,10 +162,20 @@ int main(int argc, const char** argv)
       /* Render here */
       RenderEngine::Renderer::clear();
 
-      shader->use();
-      texture->bind();
-      VAO.bind();
-      glDrawElements(GL_TRIANGLES, EBO.getCount(), GL_UNSIGNED_INT, nullptr);
+      sprite->render(1);
+
+      if (glfwGetKey(window, GLFW_KEY_KP_ADD) == GLFW_PRESS)
+      {
+        sprite->setScale(glm::vec2(sprite->getScale().x + 1, sprite->getScale().y + 1));
+      }
+      if (glfwGetKey(window, GLFW_KEY_KP_SUBTRACT) == GLFW_PRESS)
+      {
+        sprite->setScale(glm::vec2(sprite->getScale().x - 1, sprite->getScale().y - 1));
+      }
+      if (glfwGetKey(window, GLFW_KEY_R) == GLFW_PRESS)
+      {
+        sprite->setRotation(sprite->getRotation() + 1);
+      }
 
       /* Swap front and back buffers */
       glfwSwapBuffers(window);

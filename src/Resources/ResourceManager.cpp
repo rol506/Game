@@ -7,6 +7,7 @@
 
 #include "../Renderer/ShaderProgram.h"
 #include "../Renderer/Texture2D.h"
+#include "../Renderer/Sprite2D.h"
 
 #define STB_IMAGE_IMPLEMENTATION
 #define STBI_NO_PSD
@@ -18,6 +19,7 @@
 std::string ResourceManager::m_path;
 ResourceManager::ShaderProgramsMap ResourceManager::m_shaderPrograms;
 ResourceManager::TexturesMap ResourceManager::m_textures;
+ResourceManager::SpritesMap ResourceManager::m_sprites;
 
 std::string ResourceManager::getFileString(const std::string& relativeFilePath)
 {
@@ -45,6 +47,7 @@ void ResourceManager::unloadAllResources()
   //CLEAR ALL RESOURCES
   m_shaderPrograms.clear();
   m_textures.clear();
+  m_sprites.clear();
 }
 
 std::shared_ptr<RenderEngine::ShaderProgram> ResourceManager::loadShaders(const std::string& shaderName, const std::string& vertexPath, const std::string& fragmentPath)
@@ -145,5 +148,38 @@ std::shared_ptr<RenderEngine::Texture2D> ResourceManager::loadTextureAtlas(const
     }
   }
   return texture;
+}
+
+std::shared_ptr<RenderEngine::Sprite2D> ResourceManager::loadSprite(const std::string& spriteName, const std::string& shaderName, const std::string textureName, const std::string& subTextureName)
+{
+  auto texture = getTexture(textureName);
+  if (!texture)
+  {
+    std::cout << "Can't find the texture: " << textureName << " for the sprite: " << spriteName << "\n";
+    return nullptr;
+  }
+
+  auto shader = getShaderProgram(shaderName);
+  if (!shader)
+  {
+    std::cout << "Can't find the shader program: " << shaderName << " for the sprite: " << spriteName << "\n";
+    return nullptr;
+  }
+
+  std::shared_ptr<RenderEngine::Sprite2D> newSprite = m_sprites.emplace(spriteName,
+      std::make_shared<RenderEngine::Sprite2D>(texture, subTextureName, shader)).first->second;;
+  return newSprite;
+}
+
+std::shared_ptr<RenderEngine::Sprite2D> ResourceManager::getSprite(const std::string& spriteName)
+{
+  auto it = m_sprites.find(spriteName);
+  if (it != m_sprites.end())
+  {
+    return it->second;
+  }
+
+  std::cout << "Can't find the sprite: " << spriteName << "\n";
+  return nullptr;
 }
 

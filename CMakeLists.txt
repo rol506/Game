@@ -22,6 +22,8 @@ add_executable(${PROJECT_NAME}
   src/Renderer/VertexArray.h
   src/Renderer/Renderer.cpp
   src/Renderer/Renderer.h
+  src/Renderer/Sprite2D.cpp
+  src/Renderer/Sprite2D.h
 
   src/Resources/ResourceManager.cpp
   src/Resources/ResourceManager.h
