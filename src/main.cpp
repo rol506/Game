@@ -61,7 +61,7 @@ static void glfwFramebufferSizeCallback(GLFWwindow* window, int width, int heigh
   glViewport(0, 0, width, height);
 }
 
-int main(void)
+int main(int argc, const char** argv)
 {
   GLFWwindow* window;
   std::string executablePath;
@@ -86,10 +86,23 @@ int main(void)
 
   ResourceManager::setExecutablePath(executablePath);
 
-  System::Socket::init(true);
-  System::Socket::connect("localhost", 4221);
-  System::Socket::sendMessage("Hello from Game!");
-  System::Socket::close();
+  if (argc > 1 && std::string(argv[1]) == "-send"){
+    System::Socket::init(true);
+    std::string host; int port;
+    std::cout << "Enter remote host: ";
+    std::cin >> host;
+    std::cout << "Enter remote host port: ";
+    std::cin >> port;
+    if (System::Socket::connect(host, port))
+    {
+      char message[2048];
+      std::cout << "Enter a message (2048 chars max): ";
+      std::cin.get();
+      std::cin.getline(message, 2048);
+      System::Socket::sendMessage(message);
+    }
+    System::Socket::close();
+  }
 
   /* Initialize the library */
   if (!glfwInit())
