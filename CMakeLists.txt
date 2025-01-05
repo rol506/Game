@@ -20,6 +20,8 @@ add_executable(${PROJECT_NAME}
   src/Renderer/IndexBuffer.h
   src/Renderer/VertexArray.cpp
   src/Renderer/VertexArray.h
+  src/Renderer/Renderer.cpp
+  src/Renderer/Renderer.h
 
   src/Resources/ResourceManager.cpp
   src/Resources/ResourceManager.h
@@ -33,6 +35,8 @@ if (UNIX)
   add_executable(TestSocket
     src/server.c
   )
+
+  set_target_properties(TestSocket PROPERTIES RUNTIME_OUTPUT_DIRECTORY ${CMAKE_BINARY_DIR}/bin)
 endif(UNIX)
 
 add_subdirectory(external/glfw)

@@ -19,8 +19,7 @@
 #include "Resources/ResourceManager.h"
 #include "Renderer/ShaderProgram.h"
 #include "Renderer/Texture2D.h"
-#include "Renderer/VertexArray.h"
-#include "Renderer/IndexBuffer.h"
+#include "Renderer/Renderer.h"
 
 #include "System/Socket.h"
 
@@ -132,8 +131,8 @@ int main(int argc, const char** argv)
   glfwSetKeyCallback(window, glfwKeyCallback);
   glfwSetFramebufferSizeCallback(window, glfwFramebufferSizeCallback);
 
-  std::cout << "OpenGL version: " << glGetString(GL_VERSION) << "\n";
-  std::cout << "OpenGL renderer: " << glGetString(GL_RENDERER) << "\n";
+  std::cout << "OpenGL version: " << RenderEngine::Renderer::getVersionStr() << "\n";
+  std::cout << "OpenGL renderer: " << RenderEngine::Renderer::getRendererStr() << "\n";
 
   {
     std::shared_ptr<RenderEngine::ShaderProgram> shader = ResourceManager::loadShaders("DefaultShader", "res/shaders/vertex.glsl", "res/shaders/fragment.glsl");
@@ -158,12 +157,12 @@ int main(int argc, const char** argv)
     glActiveTexture(GL_TEXTURE0);
     texture->bind();
 
-    glClearColor(66.f/255.f, 170.f/255.f, 255.f/255.f, 1.0f);
+    RenderEngine::Renderer::setClearColor(66.f/255.f, 170.f/255.f, 255.f/255.f, 1.0f);
     /* Loop until the user closes the window */
     while (!glfwWindowShouldClose(window))
     {
       /* Render here */
-      glClear(GL_COLOR_BUFFER_BIT);
+      RenderEngine::Renderer::clear();
 
       shader->use();
       texture->bind();

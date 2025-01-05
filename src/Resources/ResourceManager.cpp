@@ -119,4 +119,31 @@ std::shared_ptr<RenderEngine::Texture2D> ResourceManager::getTexture(const std::
   return nullptr;
 }
 
+std::shared_ptr<RenderEngine::Texture2D> ResourceManager::loadTextureAtlas(const std::string& textureName, const std::string& texturePath,
+                                                                   const unsigned int width, const unsigned int height, const std::vector<std::string>& subTexturesNames)
+{
+  auto texture = loadTexture(std::move(textureName), std::move(texturePath));
+  if (texture)
+  {
+    const unsigned int textureWidth = texture->width();
+    const unsigned int textureHeight = texture->height();
+    unsigned int currentTextureOffsetX = 0;
+    unsigned int currentTextureOffsetY = textureHeight;
+
+    for (auto& currentSubTextureName : subTexturesNames)
+    {
+      glm::vec2 leftBottomUV(static_cast<float>(currentTextureOffsetX)/textureWidth, static_cast<float>(currentTextureOffsetY - height)/textureHeight);
+      glm::vec2 rightTopUV(static_cast<float>(currentTextureOffsetX + width)/textureWidth, static_cast<float>(currentTextureOffsetY)/textureHeight);
+      texture->addSubTexture(std::move(currentSubTextureName), leftBottomUV, rightTopUV);
+
+      currentTextureOffsetX += width;
+      if (currentTextureOffsetX >= textureWidth)
+      {
+        currentTextureOffsetX = 0;
+        currentTextureOffsetX -= height;
+      }
+    }
+  }
+  return texture;
+}
 

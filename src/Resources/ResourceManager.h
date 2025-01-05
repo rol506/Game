@@ -3,6 +3,7 @@
 #include <string>
 #include <unordered_map>
 #include <memory>
+#include <vector>
 
 namespace RenderEngine
 {
@@ -24,6 +25,8 @@ public:
 
   static std::shared_ptr<RenderEngine::Texture2D> loadTexture(const std::string& textureName, const std::string& texturePath);
   static std::shared_ptr<RenderEngine::Texture2D> getTexture(const std::string& textureName);
+  static std::shared_ptr<RenderEngine::Texture2D> loadTextureAtlas(const std::string& textureName, const std::string& texturePath,
+                                                                   const unsigned int width, const unsigned int height, const std::vector<std::string>& subTexturesNames);
 
 private:
 
