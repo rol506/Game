@@ -52,7 +52,7 @@ namespace RenderEngine
   {
     m_shader->use();
 
-    m_shader->setFloat(0, "tex");
+    m_shader->setInt(0, "tex");
     glActiveTexture(GL_TEXTURE0);
     m_texture->bind();
 

@@ -24,6 +24,8 @@ add_executable(${PROJECT_NAME}
   src/Renderer/Renderer.h
   src/Renderer/Sprite2D.cpp
   src/Renderer/Sprite2D.h
+  src/Renderer/Text.cpp
+  src/Renderer/Text.h
 
   src/Resources/ResourceManager.cpp
   src/Resources/ResourceManager.h
@@ -49,6 +51,9 @@ target_link_libraries(${PROJECT_NAME} glad)
 
 add_subdirectory(external/glm)
 target_link_libraries(${PROJECT_NAME} glm)
+
+add_subdirectory(external/freetype)
+target_link_libraries(${PROJECT_NAME} freetype)
 
 target_compile_features(${PROJECT_NAME} PUBLIC cxx_std_17)
 set_target_properties(${PROJECT_NAME} PROPERTIES RUNTIME_OUTPUT_DIRECTORY ${CMAKE_BINARY_DIR}/bin)

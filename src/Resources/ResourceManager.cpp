@@ -5,6 +5,8 @@
 #include <memory>
 #include <sstream>
 
+#include <glad/glad.h>
+
 #include "../Renderer/ShaderProgram.h"
 #include "../Renderer/Texture2D.h"
 #include "../Renderer/Sprite2D.h"
@@ -16,10 +18,14 @@
 #define STBI_NO_PNM
 #include "stb_image.h"
 
+#include <ft2build.h>
+#include FT_FREETYPE_H
+
 std::string ResourceManager::m_path;
 ResourceManager::ShaderProgramsMap ResourceManager::m_shaderPrograms;
 ResourceManager::TexturesMap ResourceManager::m_textures;
 ResourceManager::SpritesMap ResourceManager::m_sprites;
+std::unordered_map<char, Character> ResourceManager::m_charset;
 
 std::string ResourceManager::getFileString(const std::string& relativeFilePath)
 {
@@ -48,6 +54,7 @@ void ResourceManager::unloadAllResources()
   m_shaderPrograms.clear();
   m_textures.clear();
   m_sprites.clear();
+  m_charset.clear();
 }
 
 std::shared_ptr<RenderEngine::ShaderProgram> ResourceManager::loadShaders(const std::string& shaderName, const std::string& vertexPath, const std::string& fragmentPath)
@@ -181,5 +188,60 @@ std::shared_ptr<RenderEngine::Sprite2D> ResourceManager::getSprite(const std::st
 
   std::cout << "Can't find the sprite: " << spriteName << "\n";
   return nullptr;
+}
+
+std::unordered_map<char, Character>* ResourceManager::loadCharset(const std::string& pathToFont)
+{
+  FT_Library ft;
+  if (FT_Init_FreeType(&ft))
+  {
+    std::cerr << "Could not init FreeType library!\n";
+    return nullptr;
+  }
+
+  FT_Face face;
+  if (FT_New_Face(ft, std::string(m_path + "/" + pathToFont).c_str(), 0, &face))
+  {
+    std::cerr << "Failed to load font: " << pathToFont << "\n";
+  } else {
+    FT_Set_Pixel_Sizes(face, 0, 128);
+
+    glPixelStorei(GL_UNPACK_ALIGNMENT, 1);
+
+    for (unsigned int c=0;c<127+1;++c)
+    {
+      if (FT_Load_Char(face, c, FT_LOAD_RENDER))
+      {
+        std::cout << "Failed to load Glyph: " << c << "\n";
+        continue;
+      }
+
+      GLuint texture;
+      glGenTextures(1, &texture);
+      glBindTexture(GL_TEXTURE_2D, texture);
+      glTexImage2D(GL_TEXTURE_2D, 0, GL_RED, face->glyph->bitmap.width,
+                   face->glyph->bitmap.rows, 0, GL_RED, GL_UNSIGNED_BYTE,
+                   face->glyph->bitmap.buffer);
+      glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_CLAMP_TO_EDGE);
+      glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_CLAMP_TO_EDGE);
+      glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
+      glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
+
+      Character character = {texture, face->glyph->bitmap.width, face->glyph->bitmap.rows,
+                             face->glyph->bitmap_left, face->glyph->bitmap_top,
+                             static_cast<unsigned int>(face->glyph->advance.x)};
+      m_charset.insert(std::pair<char, Character>(c, character));
+    }
+    glBindTexture(GL_TEXTURE_2D, 0);
+  }
+
+  FT_Done_Face(face);
+  FT_Done_FreeType(ft);
+  return &m_charset;
+}
+
+std::unordered_map<char, Character>* ResourceManager::getCharset()
+{
+  return &m_charset;
 }
 

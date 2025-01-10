@@ -12,6 +12,14 @@ namespace RenderEngine
   class Sprite2D;
 }
 
+struct Character
+{
+  unsigned int textureID;
+  unsigned int sizeX, sizeY;
+  int bearingX, bearingY;
+  unsigned int advance;
+};
+
 class ResourceManager
 {
 public:
@@ -32,11 +40,15 @@ public:
   static std::shared_ptr<RenderEngine::Sprite2D> loadSprite(const std::string& spriteName, const std::string& shaderName, const std::string textureName, const std::string& subTextureName="DEFAULT");
   static std::shared_ptr<RenderEngine::Sprite2D> getSprite(const std::string& spriteName);
 
+  static std::unordered_map<char, Character>* loadCharset(const std::string& pathToFont);
+  static std::unordered_map<char, Character>* getCharset();
+
 private:
 
   static std::string getFileString(const std::string& relativeFilePath);
 
   static std::string m_path;
+  static std::unordered_map<char, Character> m_charset;
 
   typedef std::unordered_map<std::string, std::shared_ptr<RenderEngine::ShaderProgram>> ShaderProgramsMap;
   static ShaderProgramsMap m_shaderPrograms;
