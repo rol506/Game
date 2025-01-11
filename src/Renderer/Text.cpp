@@ -46,6 +46,7 @@ namespace RenderEngine
 
     m_shader->use();
     m_shader->setVec3(m_color, "textColor");
+    m_shader->setInt(0, "back");
     m_shader->setVec4(m_backgroundColor, "backgroundColor");
     glActiveTexture(GL_TEXTURE0);
     glBindVertexArray(m_vao);
@@ -77,12 +78,32 @@ namespace RenderEngine
         glBindBuffer(GL_ARRAY_BUFFER, m_vbo);
         glBufferSubData(GL_ARRAY_BUFFER, 0, sizeof(vertices), vertices);
 
-        glBindBuffer(GL_ARRAY_BUFFER, 0);
         glDrawArrays(GL_TRIANGLES, 0, 6);
 
         x += (ch.advance >> 6) * m_scale;
         x += 1;
     }
+
+    if (m_backgroundColor.w > 0.0f)
+    {
+      m_shader->setInt(1, "back");
+      //draw background
+      float vertices[6][4] = {
+        {m_position.x,           m_position.y,            0.0f, 0.0f},
+        {m_position.x,           m_position.y + m_height, 0.0f, 0.0f},
+        {m_position.x + m_width, m_position.y + m_height, 0.0f, 0.0f},
+
+        {m_position.x + m_width, m_position.y + m_height, 0.0f, 0.0f},
+        {m_position.x + m_width, m_position.y,            0.0f, 0.0f},
+        {m_position.x,           m_position.y,            0.0f, 0.0f},
+      };
+
+      glBindBuffer(GL_ARRAY_BUFFER, m_vbo);
+      glBufferSubData(GL_ARRAY_BUFFER, 0, sizeof(vertices), vertices);
+      glDrawArrays(GL_TRIANGLES, 0, 6);
+    }
+
+    glBindBuffer(GL_ARRAY_BUFFER, 0);
     glBindVertexArray(0);
     glBindTexture(GL_TEXTURE_2D, 0); 
   }
@@ -105,7 +126,7 @@ namespace RenderEngine
 
   void Text::setBackground(const float r, const float g, const float b, const float a)
   {
-    m_backgroundColor = glm::vec4(r, g, b, a); 
+    //m_backgroundColor = glm::vec4(r, g, b, a); 
   }
 
   void Text::setText(const std::string& text)

@@ -30,6 +30,13 @@
 glm::ivec2 gWindowSize(640, 480);
 glm::mat4 gProjection(1.0f);
 
+float playerSpeed = 0.25f;
+
+constexpr const double SCR_COORD_TO_WORLD_X = 640.0f;
+constexpr const double SCR_COORD_TO_WORLD_Y = 480.0f;
+constexpr const double SPRITE_SCALE_TO_WORLD_X = 0.078f / 50.f;
+constexpr const double SPRITE_SCALE_TO_WORLD_Y = 0.1f / 50.f;
+
 static GLfloat vertices[] = {
   
   // 1 - 2
@@ -217,12 +224,12 @@ int main(int argc, const char** argv)
     glm::mat4 view(1.0f);
     view = glm::translate(view, glm::vec3(0.0f, -3.0f, 0.0f));
 
-    sprite->setScale(glm::vec2(1));
+    sprite->setScale(glm::vec2(50));
     sprite->setPosition(glm::vec2(gWindowSize.x/2.f, gWindowSize.y/2.f));
-    sprite->setRotation(45.f);
 
     RenderEngine::Text fpsCounter("0 FPS", glm::vec2(0.0f, 0.0f), 0.1f, glm::vec3(0.0f, 0.0f, 0.0f), textShader);
     fpsCounter.setPosition(glm::vec2(5, 500 - fpsCounter.getHeight() * 1.5f));
+    fpsCounter.setBackground(0.0f, 1.0f, 0.0f, 0.5f);
     
     int fps = 0;
     auto timeStart = std::chrono::high_resolution_clock::now();
@@ -260,6 +267,7 @@ int main(int argc, const char** argv)
 
       fpsCounter.render();
 
+      //convert mouse coords
       double xpos, ypos;
       glfwGetCursorPos(window, &xpos, &ypos);
       xpos /= gWindowSize.x;
@@ -267,19 +275,29 @@ int main(int argc, const char** argv)
       ypos -= 1.0f;
       ypos *= -1.f;
 
+      sprite->setPosition(glm::vec2((xpos - sprite->getScale().x * SPRITE_SCALE_TO_WORLD_X) * SCR_COORD_TO_WORLD_X, (ypos - sprite->getScale().y * SPRITE_SCALE_TO_WORLD_Y) * SCR_COORD_TO_WORLD_Y));
+      std::cout << sprite->getPosition().x << " " << sprite->getPosition().y << "\n";
+      //std::cout << xpos << " " << ypos << "\n";
+
       sprite->render(0);
 
-      if (glfwGetKey(window, GLFW_KEY_KP_ADD) == GLFW_PRESS)
+      //input
+      if (glfwGetKey(window, GLFW_KEY_W) == GLFW_PRESS)
       {
-        sprite->setScale(glm::vec2(sprite->getScale().x + 1, sprite->getScale().y + 1));
+        sprite->setPosition(sprite->getPosition() + glm::vec2(0.0f, 1.0f) * playerSpeed * static_cast<float>(deltaTime));
       }
-      if (glfwGetKey(window, GLFW_KEY_KP_SUBTRACT) == GLFW_PRESS)
+      else if (glfwGetKey(window, GLFW_KEY_S) == GLFW_PRESS)
       {
-        sprite->setScale(glm::vec2(sprite->getScale().x - 1, sprite->getScale().y - 1));
+        sprite->setPosition(sprite->getPosition() + glm::vec2(0.0f, -1.0f) * playerSpeed * static_cast<float>(deltaTime));
       }
-      if (glfwGetKey(window, GLFW_KEY_R) == GLFW_PRESS)
+
+      if (glfwGetKey(window, GLFW_KEY_A) == GLFW_PRESS)
       {
-        sprite->setRotation(sprite->getRotation() + 1);
+        sprite->setPosition(sprite->getPosition() + glm::vec2(-1.0f, 0.0f) * playerSpeed * static_cast<float>(deltaTime));
+      }
+      else if (glfwGetKey(window, GLFW_KEY_D) == GLFW_PRESS)
+      {
+        sprite->setPosition(sprite->getPosition() + glm::vec2(1.0f, 0.0f) * playerSpeed * static_cast<float>(deltaTime));
       }
 
       //timing

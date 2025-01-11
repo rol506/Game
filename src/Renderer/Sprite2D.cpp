@@ -19,10 +19,10 @@ namespace RenderEngine
       // 0 - 3
 
       // X     Y              U                            V
-      -0.5f, -0.5f, subTexture.leftBottomUV.x, subTexture.leftBottomUV.y,
-      -0.5f,  0.5f, subTexture.leftBottomUV.x, subTexture.rightTopUV.y,
-       0.5f,  0.5f, subTexture.rightTopUV.x,   subTexture.rightTopUV.y,
-       0.5f, -0.5f, subTexture.rightTopUV.x,   subTexture.leftBottomUV.y,
+      0.0f, 0.0f, subTexture.leftBottomUV.x, subTexture.leftBottomUV.y,
+      0.0f, 1.0f, subTexture.leftBottomUV.x, subTexture.rightTopUV.y,
+      1.0f, 1.0f, subTexture.rightTopUV.x,   subTexture.rightTopUV.y,
+      1.0f, 0.0f, subTexture.rightTopUV.x,   subTexture.leftBottomUV.y,
     };
 
     GLuint indices[] = {
