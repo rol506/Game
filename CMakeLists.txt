@@ -30,6 +30,9 @@ add_executable(${PROJECT_NAME}
   src/Resources/ResourceManager.cpp
   src/Resources/ResourceManager.h
 
+  src/Physics/PhysicsEngine.cpp
+  src/Physics/PhysicsEngine.h
+
   src/System/Socket.cpp
   src/System/Socket.h
 )

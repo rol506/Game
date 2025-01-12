@@ -117,5 +117,15 @@ namespace RenderEngine
     m_vertexBuffer = std::move(sprite.m_vertexBuffer);
     m_indexBuffer = std::move(sprite.m_indexBuffer);
     m_vertexArray = std::move(sprite.m_vertexArray);
+  } 
+
+  void Sprite2D::setTargetPosition(const glm::vec2& position)
+  { 
+    m_targetPosition = position;
+  }
+
+  void Sprite2D::setOutline(int enabled)
+  {
+    m_shader->setFloat(enabled, "outline");
   }
 }

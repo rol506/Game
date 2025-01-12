@@ -22,6 +22,7 @@
 #include "System/Socket.h"
 #include "Renderer/Sprite2D.h"
 #include "Renderer/Text.h"
+#include "Physics/PhysicsEngine.h"
 
 #include <glm/vec2.hpp>
 #include <glm/mat4x4.hpp>
@@ -31,11 +32,6 @@ glm::ivec2 gWindowSize(640, 480);
 glm::mat4 gProjection(1.0f);
 
 float playerSpeed = 0.25f;
-
-constexpr const double SCR_COORD_TO_WORLD_X = 640.0f;
-constexpr const double SCR_COORD_TO_WORLD_Y = 480.0f;
-constexpr const double SPRITE_SCALE_TO_WORLD_X = 0.078f / 50.f;
-constexpr const double SPRITE_SCALE_TO_WORLD_Y = 0.1f / 50.f;
 
 static GLfloat vertices[] = {
   
@@ -170,7 +166,7 @@ int main(int argc, const char** argv)
     return -1;
   }
 
-  glfwWindowHint(GLFW_OPENGL_DEBUG_CONTEXT, true);
+  glfwWindowHint(GLFW_OPENGL_DEBUG_CONTEXT, false);
   glfwWindowHint(GLFW_CONTEXT_VERSION_MAJOR, 4);
   glfwWindowHint(GLFW_CONTEXT_VERSION_MINOR, 3);
   glfwWindowHint(GLFW_OPENGL_PROFILE, GLFW_OPENGL_CORE_PROFILE);
@@ -218,6 +214,7 @@ int main(int argc, const char** argv)
     auto textShader = ResourceManager::loadShaders("TextShader", "res/shaders/vText.vert", "res/shaders/fText.frag");
     auto texture = ResourceManager::loadTexture("SpriteTexture", "res/textures/rol506_logo.jpg");
     auto sprite = ResourceManager::loadSprite("Sprite", "SpriteShader", "SpriteTexture");
+    auto sprite2 = ResourceManager::loadSprite("Sprite2", "SpriteShader", "SpriteTexture");
     std::cout << "Resources are loaded!\n";
 
     gProjection = glm::ortho(0.0f, static_cast<float>(gWindowSize.x), 0.0f, static_cast<float>(gWindowSize.y), -100.f, 100.f);
@@ -225,12 +222,26 @@ int main(int argc, const char** argv)
     view = glm::translate(view, glm::vec3(0.0f, -3.0f, 0.0f));
 
     sprite->setScale(glm::vec2(50));
-    sprite->setPosition(glm::vec2(gWindowSize.x/2.f, gWindowSize.y/2.f));
+    sprite->setTargetPosition(glm::vec2(0.5f * SCR_COORD_TO_WORLD_X, 0.5f * SCR_COORD_TO_WORLD_Y));
+    sprite->setPosition(glm::vec2(0.5f * SCR_COORD_TO_WORLD_X, 0.5f * SCR_COORD_TO_WORLD_Y));
+    sprite2->setScale(glm::vec2(50));
+    sprite2->setTargetPosition(glm::vec2(0.2f * SCR_COORD_TO_WORLD_X, 0.2f * SCR_COORD_TO_WORLD_Y));
+    sprite2->setPosition(glm::vec2(0.2f * SCR_COORD_TO_WORLD_X, 0.2f * SCR_COORD_TO_WORLD_Y));
 
     RenderEngine::Text fpsCounter("0 FPS", glm::vec2(0.0f, 0.0f), 0.1f, glm::vec3(0.0f, 0.0f, 0.0f), textShader);
     fpsCounter.setPosition(glm::vec2(5, 500 - fpsCounter.getHeight() * 1.5f));
     fpsCounter.setBackground(0.0f, 1.0f, 0.0f, 0.5f);
-    
+
+    RenderEngine::Text collision("COLLISION", glm::vec2(0.5f * SCR_COORD_TO_WORLD_X, 0.0f), 0.2f, glm::vec3(0.0f), textShader);
+    collision.setPosition(glm::vec2(0.5f * SCR_COORD_TO_WORLD_X, 0.9f * SCR_COORD_TO_WORLD_Y));
+
+    RenderEngine::Text positionText("000.0, 000.0", glm::vec2(0.0f, 0.0f), 0.1f, glm::vec3(0.0f), textShader);
+    positionText.setPosition(glm::vec2(0.0f, 500 - fpsCounter.getHeight() * 3.f));
+
+    PhysicsEngine::init();
+    PhysicsEngine::addDynamicObject(sprite);
+    PhysicsEngine::addDynamicObject(sprite2); 
+
     int fps = 0;
     auto timeStart = std::chrono::high_resolution_clock::now();
     auto timeEnd = std::chrono::high_resolution_clock::now();
@@ -249,10 +260,9 @@ int main(int argc, const char** argv)
     /* Loop until the user closes the window */
     while (!glfwWindowShouldClose(window))
     {
-      /* Render here */
       RenderEngine::Renderer::clear();
 
-      //timing
+      //TIMING
       timeStart = std::chrono::high_resolution_clock::now();
       deltaTime = std::chrono::duration<double, std::milli>(timeStart - timeEnd).count();
       FPSTimer += deltaTime;
@@ -275,32 +285,45 @@ int main(int argc, const char** argv)
       ypos -= 1.0f;
       ypos *= -1.f;
 
-      sprite->setPosition(glm::vec2((xpos - sprite->getScale().x * SPRITE_SCALE_TO_WORLD_X) * SCR_COORD_TO_WORLD_X, (ypos - sprite->getScale().y * SPRITE_SCALE_TO_WORLD_Y) * SCR_COORD_TO_WORLD_Y));
-      std::cout << sprite->getPosition().x << " " << sprite->getPosition().y << "\n";
-      //std::cout << xpos << " " << ypos << "\n";
+      //PHYSICS
+
+      PhysicsEngine::update(deltaTime);
+
+      /*if (PhysicsEngine::mouseRaycast(xpos, ypos))
+      {
+        collision.render();
+      }*/
+
+      //RENDER
 
       sprite->render(0);
+      sprite2->render(0);
+      positionText.setText(std::to_string(xpos) + " " + std::to_string(ypos));
+      positionText.render();
 
-      //input
+      //INPUT
+
+      sprite2->setTargetPosition(glm::vec2(xpos * SCR_COORD_TO_WORLD_X, ypos * SCR_COORD_TO_WORLD_Y) -
+        glm::vec2(sprite2->getScale().x * SPRITE_SCALE_TO_WORLD_X/2.f, sprite2->getScale().y * SPRITE_SCALE_TO_WORLD_Y/2.f));
+
       if (glfwGetKey(window, GLFW_KEY_W) == GLFW_PRESS)
       {
-        sprite->setPosition(sprite->getPosition() + glm::vec2(0.0f, 1.0f) * playerSpeed * static_cast<float>(deltaTime));
+        sprite->setTargetPosition(sprite->getTargetPosition() + glm::vec2(0.0f, 1.0f) * playerSpeed * static_cast<float>(deltaTime));
       }
-      else if (glfwGetKey(window, GLFW_KEY_S) == GLFW_PRESS)
+      if (glfwGetKey(window, GLFW_KEY_S) == GLFW_PRESS)
       {
-        sprite->setPosition(sprite->getPosition() + glm::vec2(0.0f, -1.0f) * playerSpeed * static_cast<float>(deltaTime));
+        sprite->setTargetPosition(sprite->getTargetPosition() + glm::vec2(0.0f, -1.0f) * playerSpeed * static_cast<float>(deltaTime));
       }
-
       if (glfwGetKey(window, GLFW_KEY_A) == GLFW_PRESS)
       {
-        sprite->setPosition(sprite->getPosition() + glm::vec2(-1.0f, 0.0f) * playerSpeed * static_cast<float>(deltaTime));
+        sprite->setTargetPosition(sprite->getTargetPosition() + glm::vec2(-1.0f, 0.0f) * playerSpeed * static_cast<float>(deltaTime));
       }
-      else if (glfwGetKey(window, GLFW_KEY_D) == GLFW_PRESS)
+      if (glfwGetKey(window, GLFW_KEY_D) == GLFW_PRESS)
       {
-        sprite->setPosition(sprite->getPosition() + glm::vec2(1.0f, 0.0f) * playerSpeed * static_cast<float>(deltaTime));
+        sprite->setTargetPosition(sprite->getTargetPosition() + glm::vec2(1.0f, 0.0f) * playerSpeed * static_cast<float>(deltaTime));
       }
 
-      //timing
+      //TIMING
       timeEnd = std::chrono::high_resolution_clock::now();
 
       /* Swap front and back buffers */
@@ -311,6 +334,7 @@ int main(int argc, const char** argv)
     }
   }
 
+  PhysicsEngine::shutdown();
   ResourceManager::unloadAllResources();
   glfwTerminate();
 
