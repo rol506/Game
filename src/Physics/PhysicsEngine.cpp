@@ -11,8 +11,7 @@ bool PhysicsEngine::pointVsRect(const glm::vec2& p, const Rectangle& r)
 
 bool PhysicsEngine::RectVsRect(const Rectangle& r1, const Rectangle& r2)
 {
-  return (r1.position.x < r2.position2.x && r1.position2.x >= r2.position.x && r1.position.y < r2.position2.y && r1.position2.y >= r2.position.y)||
-    (r1.position.y <= 5.0f);
+  return (r1.position.x < r2.position2.x && r1.position2.x >= r2.position.x && r1.position.y < r2.position2.y && r1.position2.y >= r2.position.y);
 }
 
 void PhysicsEngine::init()
@@ -49,7 +48,8 @@ void PhysicsEngine::update(const double deltaTime)
         obj2->getPosition().y + (obj2->getScale().y * SPRITE_SCALE_TO_WORLD_Y))}
       ))
       {
-        obj1->isGrounded = true;
+        if (obj1->getPosition().y > obj2->getPosition().y)
+          obj1->isGrounded = true;
         targetPosition = obj1->getPosition();
         obj1->velocity.y = 0.0f;
 
@@ -57,7 +57,10 @@ void PhysicsEngine::update(const double deltaTime)
 
         //std::cout << "collision!\n";
       } else {
-        obj1->isGrounded = false;
+        if (obj1->getPosition().y > 5.f)
+          obj1->isGrounded = false;
+        else
+         obj1->isGrounded = true;
         //obj1->setPosition(obj1->getTargetPosition());
       }
 
@@ -76,6 +79,21 @@ void PhysicsEngine::update(const double deltaTime)
         obj1->setPosition(obj1->getPosition() + glm::vec2(obj2->getPosition().x - obj2->getLastPosition().x, 0.0));
       } else {
         obj1->setPosition(targetPosition);
+      }
+
+      if (obj1->getPosition().y <= 5.f)
+      {
+        obj1->setPosition(glm::vec2(obj1->getPosition().x, 5.0f));
+        obj1->velocity.y = 0;
+      }
+      if (obj1->getPosition().x <= 0.0f)
+      {
+        obj1->setPosition(glm::vec2(0.0f, obj1->getPosition().y));
+        obj1->velocity.x = 0;
+      }else if (obj1->getPosition().x + obj1->getScale().x * SPRITE_SCALE_TO_WORLD_X >= 1.0f * SCR_COORD_TO_WORLD_X)
+      {
+        obj1->setPosition(glm::vec2(1.0f * SCR_COORD_TO_WORLD_X - obj1->getScale().x * SPRITE_SCALE_TO_WORLD_X, obj1->getPosition().y));
+        obj1->velocity.x = 0;
       }
     }
 

@@ -9,6 +9,7 @@
 #include <iostream>
 #include <string>
 #include <chrono>
+#include <thread>
 
 //get path
 #ifdef __linux__
@@ -33,7 +34,13 @@ glm::mat4 gProjection(1.0f);
 
 float playerSpeed = 1.f;
 
-static GLfloat vertices[] = {
+unsigned int fpsMax = 144;
+unsigned int physicsFPS = 144;
+double deltaFPS = 1000/static_cast<double>(fpsMax);
+double deltaTime = 0.f;
+double fixedDeltaTime = 0.f;
+
+/*static GLfloat vertices[] = {
   
   // 1 - 2
   // | / |
@@ -49,7 +56,7 @@ static GLfloat vertices[] = {
 static GLuint indices[] = {
   0, 1, 2,
   0, 2, 3,
-};
+};*/
 
 static void glfwKeyCallback(GLFWwindow* window, int key, int scancode, int action, int mods)
 {
@@ -113,6 +120,25 @@ void APIENTRY glDebugOutput(GLenum source,
         case GL_DEBUG_SEVERITY_NOTIFICATION: std::cout << "Severity: notification"; break;
     } std::cout << "\n";
     std::cout << "[OpenGL debug message]\n";
+}
+
+void phys_thread_func(GLFWwindow* window)
+{
+  auto lastTime = std::chrono::high_resolution_clock::now();
+  while (!glfwWindowShouldClose(window))
+  {
+    fixedDeltaTime = std::chrono::duration<double, std::milli>(std::chrono::high_resolution_clock::now() - lastTime).count();
+
+    if (fixedDeltaTime < 1000.f/static_cast<double>(physicsFPS))
+    {
+      std::this_thread::sleep_for(std::chrono::milliseconds(static_cast<int>(1000.f/static_cast<double>(physicsFPS) - fixedDeltaTime)));
+      continue;
+    }
+
+    PhysicsEngine::update(fixedDeltaTime);
+
+    lastTime = std::chrono::high_resolution_clock::now();
+  }
 }
 
 int main(int argc, const char** argv)
@@ -224,7 +250,7 @@ int main(int argc, const char** argv)
     sprite->setScale(glm::vec2(50));
     sprite->setPosition(glm::vec2(0.5f * SCR_COORD_TO_WORLD_X, 0.5f * SCR_COORD_TO_WORLD_Y));
     sprite2->setScale(glm::vec2(50));
-    sprite2->setPosition(glm::vec2(0.2f * SCR_COORD_TO_WORLD_X, 0.2f * SCR_COORD_TO_WORLD_Y));
+    sprite2->setPosition(glm::vec2(0.5f * SCR_COORD_TO_WORLD_X, 0.2f * SCR_COORD_TO_WORLD_Y));
     sprite2->isStatic = true;
 
     RenderEngine::Text fpsCounter("0 FPS", glm::vec2(0.0f, 0.0f), 0.1f, glm::vec3(0.0f, 0.0f, 0.0f), textShader);
@@ -241,7 +267,6 @@ int main(int argc, const char** argv)
     int fps = 0;
     auto timeStart = std::chrono::high_resolution_clock::now();
     auto timeEnd = std::chrono::high_resolution_clock::now();
-    double deltaTime = 0.f;
     double FPSTimer = 0.f;
 
     textShader->use();
@@ -253,6 +278,9 @@ int main(int argc, const char** argv)
     shader->setMat4(view, "viewMatrix");
     RenderEngine::Renderer::setDepthTest(true);
     RenderEngine::Renderer::setClearColor(66.f/255.f, 170.f/255.f, 255.f/255.f, 1.0f);
+
+    std::thread phys_th(phys_thread_func, window);
+
     /* Loop until the user closes the window */
     while (!glfwWindowShouldClose(window))
     {
@@ -261,6 +289,13 @@ int main(int argc, const char** argv)
       //TIMING
       timeStart = std::chrono::high_resolution_clock::now();
       deltaTime = std::chrono::duration<double, std::milli>(timeStart - timeEnd).count();
+
+      if (deltaTime < deltaFPS)
+      {
+        std::this_thread::sleep_for(std::chrono::milliseconds(static_cast<int>(deltaFPS-deltaTime)));
+        continue;
+      }
+
       FPSTimer += deltaTime;
       fps += 1;
 
@@ -283,7 +318,7 @@ int main(int argc, const char** argv)
 
       //PHYSICS
 
-      PhysicsEngine::update(deltaTime);
+      //PhysicsEngine::update(deltaTime);
 
       //RENDER
 
@@ -317,7 +352,7 @@ int main(int argc, const char** argv)
       }
       if (sprite->isGrounded && glfwGetKey(window, GLFW_KEY_SPACE) == GLFW_PRESS)
       {
-        sprite->velocity.y += 15.f;
+        sprite->velocity.y = 15.f;
       }
 
       //TIMING
@@ -329,6 +364,7 @@ int main(int argc, const char** argv)
       /* Poll for and process events */
       glfwPollEvents();
     }
+    phys_th.join();
   }
 
   PhysicsEngine::shutdown();
