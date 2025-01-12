@@ -11,7 +11,8 @@ bool PhysicsEngine::pointVsRect(const glm::vec2& p, const Rectangle& r)
 
 bool PhysicsEngine::RectVsRect(const Rectangle& r1, const Rectangle& r2)
 {
-  return (r1.position.x < r2.position2.x && r1.position2.x >= r2.position.x && r1.position.y < r2.position2.y && r1.position2.y >= r2.position.y);
+  return (r1.position.x < r2.position2.x && r1.position2.x >= r2.position.x && r1.position.y < r2.position2.y && r1.position2.y >= r2.position.y)||
+    (r1.position.y <= 5.0f);
 }
 
 void PhysicsEngine::init()
@@ -28,26 +29,57 @@ void PhysicsEngine::update(const double deltaTime)
 {
   for (std::shared_ptr<RenderEngine::Sprite2D> obj1 : m_dynamicObjects)
   {
+    if (!obj1->isStatic)
+      obj1->velocity.y -= G;
+  //obj1->setTargetPosition(obj1->getTargetPosition() + obj1->velocity);
     for (std::shared_ptr<RenderEngine::Sprite2D> obj2 : m_dynamicObjects)
     {
-      if (obj1 == obj2)
+      if (obj1 == obj2 || obj1->isStatic)
       {
         continue;
       }
 
+      glm::vec2 targetPosition = obj1->getPosition();
+      targetPosition += glm::vec2(0.0f, obj1->velocity.y);
+
       if (RectVsRect(
-        {obj1->getTargetPosition(), glm::vec2(obj1->getTargetPosition().x + (obj1->getScale().x * SPRITE_SCALE_TO_WORLD_X),
-        obj1->getPosition().y + (obj1->getScale().y * SPRITE_SCALE_TO_WORLD_Y))},
+        {targetPosition, glm::vec2(targetPosition.x + (obj1->getScale().x * SPRITE_SCALE_TO_WORLD_X),
+        targetPosition.y + (obj1->getScale().y * SPRITE_SCALE_TO_WORLD_Y))},
         {obj2->getPosition(), glm::vec2(obj2->getPosition().x + (obj2->getScale().x * SPRITE_SCALE_TO_WORLD_X),
         obj2->getPosition().y + (obj2->getScale().y * SPRITE_SCALE_TO_WORLD_Y))}
       ))
       {
-        obj1->setTargetPosition(obj1->getPosition());
+        obj1->isGrounded = true;
+        targetPosition = obj1->getPosition();
+        obj1->velocity.y = 0.0f;
+
+        obj1->setPosition(obj1->getPosition() + glm::vec2(0.0f, obj2->getPosition().y -obj2->getLastPosition().y));
+
         //std::cout << "collision!\n";
       } else {
-        obj1->setPosition(obj1->getTargetPosition());
+        obj1->isGrounded = false;
+        //obj1->setPosition(obj1->getTargetPosition());
+      }
+
+      targetPosition += glm::vec2(obj1->velocity.x, 0.0f);
+
+      if (RectVsRect(
+        {targetPosition, glm::vec2(targetPosition.x + (obj1->getScale().x * SPRITE_SCALE_TO_WORLD_X),
+        targetPosition.y + (obj1->getScale().y * SPRITE_SCALE_TO_WORLD_Y))},
+        {obj2->getPosition(), glm::vec2(obj2->getPosition().x + (obj2->getScale().x * SPRITE_SCALE_TO_WORLD_X),
+        obj2->getPosition().y + (obj2->getScale().y * SPRITE_SCALE_TO_WORLD_Y))}
+      ))
+      {
+        targetPosition = obj1->getPosition();
+        obj1->velocity.x = 0.0f;
+
+        obj1->setPosition(obj1->getPosition() + glm::vec2(obj2->getPosition().x - obj2->getLastPosition().x, 0.0));
+      } else {
+        obj1->setPosition(targetPosition);
       }
     }
+
+    obj1->velocity.x -= obj1->velocity.x * 0.2;
   }
 }
 

@@ -9,6 +9,9 @@ constexpr const double SCR_COORD_TO_WORLD_Y = 480.0f;
 constexpr const double SPRITE_SCALE_TO_WORLD_X = 0.078f / 50.f * SCR_COORD_TO_WORLD_X;
 constexpr const double SPRITE_SCALE_TO_WORLD_Y = 0.1f / 50.f * SCR_COORD_TO_WORLD_Y;
 
+constexpr const float G=1.0f;
+constexpr const float airForce = 0.1f;
+
 namespace RenderEngine
 {
   class Sprite2D;

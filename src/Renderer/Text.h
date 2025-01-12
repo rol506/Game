@@ -43,6 +43,8 @@ namespace RenderEngine
 
     float m_width;
     float m_height;
+    float m_newLineHeight;
+    float m_lastWidth;
 
     std::shared_ptr<ShaderProgram> m_shader;
 

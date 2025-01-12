@@ -8,7 +8,7 @@
 namespace RenderEngine
 { 
   Sprite2D::Sprite2D(std::shared_ptr<Texture2D> texture, const std::string& initialSubTexture, std::shared_ptr<ShaderProgram> shader)
-    : m_texture(std::move(texture)), m_shader(std::move(shader)), m_position(glm::vec2(0.0f)), m_scale(glm::vec2(1.0f)), m_rotation(0.0f)
+    : m_texture(std::move(texture)), m_shader(std::move(shader)), m_position(glm::vec2(0.0f)), m_scale(glm::vec2(1.0f)), m_rotation(0.0f), velocity(0.0f)
   {
     auto subTexture = m_texture->getSubTexture(std::move(initialSubTexture)); 
 
@@ -71,6 +71,7 @@ namespace RenderEngine
 
   void Sprite2D::setPosition(const glm::vec2& position)
   {
+    m_lastPosition = m_position;
     m_position = position;
   }
 
@@ -117,12 +118,7 @@ namespace RenderEngine
     m_vertexBuffer = std::move(sprite.m_vertexBuffer);
     m_indexBuffer = std::move(sprite.m_indexBuffer);
     m_vertexArray = std::move(sprite.m_vertexArray);
-  } 
-
-  void Sprite2D::setTargetPosition(const glm::vec2& position)
-  { 
-    m_targetPosition = position;
-  }
+  }  
 
   void Sprite2D::setOutline(int enabled)
   {

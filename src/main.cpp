@@ -31,7 +31,7 @@
 glm::ivec2 gWindowSize(640, 480);
 glm::mat4 gProjection(1.0f);
 
-float playerSpeed = 0.25f;
+float playerSpeed = 1.f;
 
 static GLfloat vertices[] = {
   
@@ -222,18 +222,14 @@ int main(int argc, const char** argv)
     view = glm::translate(view, glm::vec3(0.0f, -3.0f, 0.0f));
 
     sprite->setScale(glm::vec2(50));
-    sprite->setTargetPosition(glm::vec2(0.5f * SCR_COORD_TO_WORLD_X, 0.5f * SCR_COORD_TO_WORLD_Y));
     sprite->setPosition(glm::vec2(0.5f * SCR_COORD_TO_WORLD_X, 0.5f * SCR_COORD_TO_WORLD_Y));
     sprite2->setScale(glm::vec2(50));
-    sprite2->setTargetPosition(glm::vec2(0.2f * SCR_COORD_TO_WORLD_X, 0.2f * SCR_COORD_TO_WORLD_Y));
     sprite2->setPosition(glm::vec2(0.2f * SCR_COORD_TO_WORLD_X, 0.2f * SCR_COORD_TO_WORLD_Y));
+    sprite2->isStatic = true;
 
     RenderEngine::Text fpsCounter("0 FPS", glm::vec2(0.0f, 0.0f), 0.1f, glm::vec3(0.0f, 0.0f, 0.0f), textShader);
     fpsCounter.setPosition(glm::vec2(5, 500 - fpsCounter.getHeight() * 1.5f));
     fpsCounter.setBackground(0.0f, 1.0f, 0.0f, 0.5f);
-
-    RenderEngine::Text collision("COLLISION", glm::vec2(0.5f * SCR_COORD_TO_WORLD_X, 0.0f), 0.2f, glm::vec3(0.0f), textShader);
-    collision.setPosition(glm::vec2(0.5f * SCR_COORD_TO_WORLD_X, 0.9f * SCR_COORD_TO_WORLD_Y));
 
     RenderEngine::Text positionText("000.0, 000.0", glm::vec2(0.0f, 0.0f), 0.1f, glm::vec3(0.0f), textShader);
     positionText.setPosition(glm::vec2(0.0f, 500 - fpsCounter.getHeight() * 3.f));
@@ -289,38 +285,39 @@ int main(int argc, const char** argv)
 
       PhysicsEngine::update(deltaTime);
 
-      /*if (PhysicsEngine::mouseRaycast(xpos, ypos))
-      {
-        collision.render();
-      }*/
-
       //RENDER
 
       sprite->render(0);
       sprite2->render(0);
-      positionText.setText(std::to_string(xpos) + " " + std::to_string(ypos));
+      positionText.setText(std::to_string(sprite->velocity.x) + " \n" + std::to_string(sprite->velocity.y));
       positionText.render();
 
       //INPUT
 
-      sprite2->setTargetPosition(glm::vec2(xpos * SCR_COORD_TO_WORLD_X, ypos * SCR_COORD_TO_WORLD_Y) -
+      sprite2->setPosition(glm::vec2(xpos * SCR_COORD_TO_WORLD_X, ypos * SCR_COORD_TO_WORLD_Y) -
         glm::vec2(sprite2->getScale().x * SPRITE_SCALE_TO_WORLD_X/2.f, sprite2->getScale().y * SPRITE_SCALE_TO_WORLD_Y/2.f));
 
       if (glfwGetKey(window, GLFW_KEY_W) == GLFW_PRESS)
       {
-        sprite->setTargetPosition(sprite->getTargetPosition() + glm::vec2(0.0f, 1.0f) * playerSpeed * static_cast<float>(deltaTime));
+        //sprite->setTargetPosition(sprite->getTargetPosition() + glm::vec2(0.0f, 1.0f) * playerSpeed * static_cast<float>(deltaTime));
       }
       if (glfwGetKey(window, GLFW_KEY_S) == GLFW_PRESS)
       {
-        sprite->setTargetPosition(sprite->getTargetPosition() + glm::vec2(0.0f, -1.0f) * playerSpeed * static_cast<float>(deltaTime));
+        //sprite->setTargetPosition(sprite->getTargetPosition() + glm::vec2(0.0f, -1.0f) * playerSpeed * static_cast<float>(deltaTime));
       }
       if (glfwGetKey(window, GLFW_KEY_A) == GLFW_PRESS)
       {
-        sprite->setTargetPosition(sprite->getTargetPosition() + glm::vec2(-1.0f, 0.0f) * playerSpeed * static_cast<float>(deltaTime));
+        //sprite->setTargetPosition(sprite->getTargetPosition() + glm::vec2(-1.0f, 0.0f) * playerSpeed * static_cast<float>(deltaTime));
+        sprite->velocity -= glm::vec2(1.0f, 0.0f) * playerSpeed;
       }
       if (glfwGetKey(window, GLFW_KEY_D) == GLFW_PRESS)
       {
-        sprite->setTargetPosition(sprite->getTargetPosition() + glm::vec2(1.0f, 0.0f) * playerSpeed * static_cast<float>(deltaTime));
+        //sprite->setTargetPosition(sprite->getTargetPosition() + glm::vec2(1.0f, 0.0f) * playerSpeed * static_cast<float>(deltaTime));
+        sprite->velocity += glm::vec2(1.0f, 0.0f) * playerSpeed;
+      }
+      if (sprite->isGrounded && glfwGetKey(window, GLFW_KEY_SPACE) == GLFW_PRESS)
+      {
+        sprite->velocity.y += 15.f;
       }
 
       //TIMING

@@ -6,7 +6,7 @@ namespace RenderEngine
 {
   Text::Text(const std::string& text, const glm::vec2& position, const float scale, const glm::vec3& color, const std::shared_ptr<ShaderProgram> shader)
     : m_text(text), m_position(position), m_color(color), m_shader(std::move(shader)),
-    m_scale(scale), m_width(0), m_height(0)
+    m_scale(scale), m_width(0), m_height(0), m_newLineHeight(0), m_lastWidth(0)
   {
     glGenBuffers(1, &m_vbo);
     glGenVertexArrays(1, &m_vao);
@@ -28,8 +28,17 @@ namespace RenderEngine
       float w = ch.sizeX * m_scale;
       float h = ch.sizeY * m_scale;
 
-      m_width += w;
-      if (h > m_height) m_height = h;
+      if (*c == '\n')
+      {
+        m_newLineHeight += h;
+        m_height = 0;
+        if (m_width > m_lastWidth) m_lastWidth = m_width;
+        m_width = 0;
+      } else {
+        m_width += w;
+        
+        if (h > m_height) m_height = h;
+      }
     }
   }
   
@@ -56,15 +65,22 @@ namespace RenderEngine
     std::string::const_iterator c;
     for (c = m_text.begin(); c != m_text.end(); c++) 
     {
-        Character ch = charset->at(*c);
+      if (*c == '\n')
+      {
+        x = m_position.x;
+        y -= m_height;
+        continue;
+      }
 
-        float xpos = x + ch.bearingX * m_scale;
-        float ypos = y - (ch.sizeY - ch.bearingY) * m_scale;
+      Character ch = charset->at(*c);
 
-        float w = ch.sizeX * m_scale;
-        float h = ch.sizeY * m_scale;
+      float xpos = x + ch.bearingX * m_scale;
+      float ypos = y - (ch.sizeY - ch.bearingY) * m_scale;
 
-        float vertices[6][4] = {
+      float w = ch.sizeX * m_scale;
+      float h = ch.sizeY * m_scale;
+
+      float vertices[6][4] = {
             { xpos,     ypos + h,   0.0f, 0.0f },            
             { xpos,     ypos,       0.0f, 1.0f },
             { xpos + w, ypos,       1.0f, 1.0f },
@@ -72,16 +88,16 @@ namespace RenderEngine
             { xpos,     ypos + h,   0.0f, 0.0f },
             { xpos + w, ypos,       1.0f, 1.0f },
             { xpos + w, ypos + h,   1.0f, 0.0f }           
-        };
+      };
 
-        glBindTexture(GL_TEXTURE_2D, ch.textureID);
-        glBindBuffer(GL_ARRAY_BUFFER, m_vbo);
-        glBufferSubData(GL_ARRAY_BUFFER, 0, sizeof(vertices), vertices);
+      glBindTexture(GL_TEXTURE_2D, ch.textureID);
+      glBindBuffer(GL_ARRAY_BUFFER, m_vbo);
+      glBufferSubData(GL_ARRAY_BUFFER, 0, sizeof(vertices), vertices);
 
-        glDrawArrays(GL_TRIANGLES, 0, 6);
+      glDrawArrays(GL_TRIANGLES, 0, 6);
 
-        x += (ch.advance >> 6) * m_scale;
-        x += 1;
+      x += (ch.advance >> 6) * m_scale;
+      x += 1;
     }
 
     if (m_backgroundColor.w > 0.0f)
@@ -115,12 +131,14 @@ namespace RenderEngine
 
   float Text::getWidth() const
   {
-    return m_width;
+    if (m_width > m_lastWidth)
+      return m_width;
+    return m_lastWidth;
   }
 
   float Text::getHeight() const
   {
-    return m_height * 2.f;
+    return (m_newLineHeight + m_height) * 2.f;
   }
     
 
