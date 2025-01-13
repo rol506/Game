@@ -34,8 +34,8 @@ glm::mat4 gProjection(1.0f);
 
 float playerSpeed = 1.f;
 
-unsigned int fpsMax = 144;
-unsigned int physicsFPS = 144;
+unsigned int fpsMax = 60;
+unsigned int physicsFPS = 60;
 double deltaFPS = 1000/static_cast<double>(fpsMax);
 double deltaTime = 0.f;
 double fixedDeltaTime = 0.f;
